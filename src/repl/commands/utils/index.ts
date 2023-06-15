@@ -1,14 +1,14 @@
 import { REPLServer } from "repl";
-import { ActiveSession, InitialSession } from "../../../services/tracker";
 
-export const terminate = (next: (...args: any[]) => void) => {
-  return ([repl]: [REPLServer, ...any[]]) => {
-    repl.displayPrompt()
-    return
-  }
-}
+import {
+  ActiveSession,
+  InitialSession
+} from "../../../services/tracker";
 
-export const checkInitialSession = (next: ([repl, session]: [REPLServer, InitialSession]) => void) => {
+export type InitialSessionArgs = [repl: REPLServer, session: InitialSession]
+export type ActiveSessionArgs = [repl: REPLServer, session: ActiveSession]
+
+export const checkInitialSession = (next: (args: InitialSessionArgs) => void) => {
   return ([repl, session]: [REPLServer, { current: ActiveSession | InitialSession }]) =>{
     if(session.current instanceof ActiveSession) {
       console.error('Already in an active session.')
@@ -20,7 +20,7 @@ export const checkInitialSession = (next: ([repl, session]: [REPLServer, Initial
   }
 }
 
-export const checkActiveSession = (next: ([repl, session]: [REPLServer, ActiveSession]) => void) => {
+export const checkActiveSession = (next: (args: ActiveSessionArgs) => void) => {
   return ([repl, session]: [REPLServer, { current: ActiveSession | InitialSession }]) =>{
     if(session.current instanceof InitialSession) {
       console.error('Start a new session with ".load" or ".new" to use this command.')
@@ -32,3 +32,9 @@ export const checkActiveSession = (next: ([repl, session]: [REPLServer, ActiveSe
   }
 }
 
+export const terminate = (next: any) => {
+  return ([repl]: [REPLServer, ...any[]]) => {
+    repl.displayPrompt()
+    return
+  }
+}

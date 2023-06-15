@@ -1,14 +1,21 @@
 import chalk from 'chalk'
-import type { REPLServer } from 'repl'
 
-import type { ActiveSession as Session } from '../../../services/tracker'
 import { Stack } from '../../stack'
-import { checkActiveSession, terminate } from '../utils'
+
+import {
+  ActiveSessionArgs,
+  checkActiveSession,
+  terminate
+} from '../utils'
+
+type EnterFieldArgs = [...session: ActiveSessionArgs, fieldName: string]
+type EnterEntryArgs = [...session: EnterFieldArgs, entryValue: string]
+type EnterDescriptionArgs = [...fieldArgs: EnterEntryArgs, description: string]
 
 const TAB = '  '
 
-const selectField = (next: ([repl, session, field]: [REPLServer, Session, string]) => void) => {
-  return ([repl, session]: [REPLServer, Session]) => {
+const selectField = (next: (args: EnterFieldArgs) => void) => {
+  return ([repl, session]: ActiveSessionArgs) => {
     const fields = session.data.fields
 
     if(fields.length === 0) {
@@ -35,8 +42,8 @@ const selectField = (next: ([repl, session, field]: [REPLServer, Session, string
   }
 }
 
-const enterEntryValue = (next: ([repl, session, field, value]: [REPLServer, Session, string, string]) => void) => {
-  return ([repl, session, field]: [REPLServer, Session, string]) => {
+const enterEntryValue = (next: (args: EnterEntryArgs) => void) => {
+  return ([repl, session, field]: EnterFieldArgs) => {
     const query = `Enter a value for "${field}": `
 
     repl.question(query, (answer: string) => {
@@ -45,8 +52,8 @@ const enterEntryValue = (next: ([repl, session, field, value]: [REPLServer, Sess
   }
 }
 
-const optionalAddDescription = (next: ([repl, session, field, entry, description]: [REPLServer, Session, string, string, string]) => void) => {
-  return ([repl, session, field, entry]: [REPLServer, Session, string, string]) => {
+const optionalAddDescription = (next: (args: EnterDescriptionArgs) => void) => {
+  return ([repl, session, field, entry]: EnterEntryArgs) => {
     const query = 'Would you like to add a description to this entry? (Y/n): '
 
     repl.question(query, (answer: string) => {
@@ -70,8 +77,8 @@ const optionalAddDescription = (next: ([repl, session, field, entry, description
   }
 }
 
-const addEntry = (next: ([repl, session, field, value]: [REPLServer, Session, string, string]) => void) => {
-  return ([repl, session, field, entry, description]: [REPLServer, Session, string, string, string]) => {
+const addEntry = (next: (args: ActiveSessionArgs) => void) => {
+  return ([repl, session, field, entry, description]: EnterDescriptionArgs) => {
     session.addEntry({
       field,
       value: entry,
@@ -79,7 +86,7 @@ const addEntry = (next: ([repl, session, field, value]: [REPLServer, Session, st
       description,
     })
 
-    return next([repl, session, field, entry])
+    return next([repl, session])
   }
 }
 

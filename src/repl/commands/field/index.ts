@@ -1,12 +1,16 @@
-import chalk from 'chalk'
-import type { REPLServer } from 'repl'
+import {Stack } from '../../stack'
 
-import type { ActiveSession as Session } from '../../../services/tracker'
-import { Stack } from '../../stack'
-import { checkActiveSession, terminate } from '../utils'
+import {
+  ActiveSessionArgs,
+  checkActiveSession,
+  terminate
+} from '../utils'
 
-const enterFieldName = (next: ([repl, session, field]: [REPLServer, Session, string]) => void) => {
-  return ([repl, session]: [REPLServer, Session]) => {
+type EnterFieldArgs = [...session: ActiveSessionArgs, fieldName: string]
+type EnterDescriptionArgs = [...fieldArgs: EnterFieldArgs, description: string]
+
+const enterFieldName = (next: (args: EnterFieldArgs) => void) => {
+  return ([repl, session]: ActiveSessionArgs) => {
     const query = 'Enter a name for your new field: '
 
     repl.question(query, (answer: string) => {
@@ -15,8 +19,8 @@ const enterFieldName = (next: ([repl, session, field]: [REPLServer, Session, str
   }
 }
 
-const enterDescription = (next: ([repl, session, field, description]: [REPLServer, Session, string, string]) => void) => {
-  return ([repl, session, field]: [REPLServer, Session, string]) => {
+const enterDescription = (next: (args: EnterDescriptionArgs) => void) => {
+  return ([repl, session, field]: EnterFieldArgs) => {
     const query = 'Enter a description for your field: '
 
     repl.question(query, (answer: string) => {
@@ -25,8 +29,8 @@ const enterDescription = (next: ([repl, session, field, description]: [REPLServe
   }
 }
 
-const addField = (next: ([repl, session]: [REPLServer, Session]) => void) => {
-  return ([repl, session, field, description]: [REPLServer, Session, string, string]) => {
+const addField = (next: (args: ActiveSessionArgs) => void) => {
+  return ([repl, session, field, description]: EnterDescriptionArgs) => {
     session.addField({
       name: field,
       description
