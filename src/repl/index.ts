@@ -26,10 +26,10 @@ const sessions: { current: InitialSession | ActiveSession }  = {
   current: new InitialSession() 
 }
 
-repl.defineCommand('dir', {
-  action: () => dir([repl])
-})
+// Commands that change the current session
+// from Inital -> Active or vice versa
 
+// Not sure how to implement these with a stack yet
 repl.defineCommand('new', {
   action: initialAction(repl, sessions, (current, name) => {
     sessions.current = current.new(name)
@@ -54,6 +54,12 @@ repl.defineCommand('close', {
   action: activeAction(repl, sessions, (current, input) => {
     sessions.current = current.exit()
   })
+})
+
+// Commands for affecting the state of
+// the current session
+repl.defineCommand('dir', {
+  action: () => dir([repl])
 })
 
 repl.defineCommand('field', {
