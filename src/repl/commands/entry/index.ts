@@ -7,6 +7,7 @@ import {
   checkActiveSession,
   terminate
 } from '../utils'
+import { REPLServer } from 'repl'
 
 type EnterFieldArgs = [...session: ActiveSessionArgs, fieldName: string]
 type EnterEntryArgs = [...session: EnterFieldArgs, entryValue: string]
@@ -42,12 +43,12 @@ const selectField = (next: (args: EnterFieldArgs) => void) => {
   }
 }
 
-const enterEntryValue = (next: (args: EnterEntryArgs) => void) => {
-  return ([repl, session, field]: EnterFieldArgs) => {
+const enterEntryValue = (next: (args: [REPLServer, string, string]) => void) => {
+  return ([repl, field]: [REPLServer, string]) => {
     const query = `Enter a value for "${field}": `
 
     repl.question(query, (answer: string) => {
-      return next([repl, session, field, answer])
+      return next([repl, field, answer])
     })
   }
 }
@@ -86,13 +87,30 @@ const addEntry = (next: (args: ActiveSessionArgs) => void) => {
       description,
     })
 
+    // A notion of a "passthrough" middleware would clean this up
+    // a bit. It seems silly for this function to need to pass repl 
+    // and session through just because a middleware down the line needs them
     return next([repl, session])
+  }
+}
+
+// Example of what a passthrough might look like
+// Pretty verbose at the moment, but it does simplify
+// enterEntryValue such that it only works with values
+// that it actually needs
+const enterEntryValuePassthrough = (next: (args: EnterEntryArgs) => void) => {
+  return (value: EnterFieldArgs) => {
+    const nextWrapped = ([repl, field, desc]: [REPLServer, string, string]) => {
+      return next([repl, value[1], field, desc])
+    }
+
+    return enterEntryValue(nextWrapped)([value[0], value[2]])
   }
 }
 
 export const entry = new Stack(checkActiveSession)
   .push(selectField)
-  .push(enterEntryValue)
+  .push(enterEntryValuePassthrough)
   .push(optionalAddDescription)
   .push(addEntry)
   .push(terminate)
