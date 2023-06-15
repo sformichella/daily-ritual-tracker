@@ -12,9 +12,11 @@ import {
   ensureAppDirectory
 } from './utils'
 
-import { field, entry } from './commands'
-
-import { APP_DIR } from '../constants'
+import {
+  field,
+  entry,
+  dir
+} from './commands'
 
 export const repl = start()
 
@@ -24,10 +26,8 @@ const sessions: { current: InitialSession | ActiveSession }  = {
   current: new InitialSession() 
 }
 
-repl.defineCommand('dir', () => {
-  console.log('The current storage directory is: ')
-  console.log(`\n  ${APP_DIR.join('\\')}\n`)
-  repl.displayPrompt()
+repl.defineCommand('dir', {
+  action: () => dir([repl])
 })
 
 repl.defineCommand('new', {
