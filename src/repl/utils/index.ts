@@ -46,16 +46,3 @@ export const activeAction = (repl: REPLServer, session: { current: InitialSessio
     repl.displayPrompt()
   }
 }
-
-export const questionWithRetry = (query: string, callback: (answer: string) => boolean) => {
-  return [
-    query,
-    (answer: string) => {
-      const proceed = callback(answer)
-
-      if(proceed) {
-        return
-      }
-    }
-  ]
-}
