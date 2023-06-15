@@ -1,5 +1,6 @@
 import * as console from 'console'
 import { start } from 'repl'
+import chalk from 'chalk'
 
 import {
   InitialSession,
@@ -42,7 +43,7 @@ repl.defineCommand('load', {
     const loaded = current.load(name)
 
     if(loaded === undefined) {
-      console.error(`No tracker found with name ${name}`)
+      console.error(chalk.red(`\nNo tracker found with name ${name}\n`))
       return
     }
 
