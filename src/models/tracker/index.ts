@@ -1,9 +1,5 @@
 import { Reference } from '../reference'
-
-import {
-  CreateDailyTrackerSchema,
-  DailyTrackerSchema,
-} from '../../schemas/tracker'
+import { DailyTrackerSchema } from '../../schemas/tracker'
 
 export const writeTracker = (ref: Reference, tracker: DailyTrackerSchema) => {
   ref.set(JSON.stringify(tracker))
