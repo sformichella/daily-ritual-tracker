@@ -1,4 +1,6 @@
-import {Stack } from '../../stack'
+import { Stack } from '../../stack'
+
+import { addField } from '../../../services/tracker'
 
 import {
   ActiveSessionArgs,
@@ -29,9 +31,9 @@ const enterDescription = (next: (args: EnterDescriptionArgs) => void) => {
   }
 }
 
-const addField = (next: (args: ActiveSessionArgs) => void) => {
+const updateTracker = (next: (args: ActiveSessionArgs) => void) => {
   return ([repl, session, field, description]: EnterDescriptionArgs) => {
-    session.addField({
+    session.data = addField(session.data, {
       name: field,
       description
     })
@@ -43,6 +45,6 @@ const addField = (next: (args: ActiveSessionArgs) => void) => {
 export const field = new Stack(checkActiveSession)
   .push(enterFieldName)
   .push(enterDescription)
-  .push(addField)
+  .push(updateTracker)
   .push(terminate)
   .get()

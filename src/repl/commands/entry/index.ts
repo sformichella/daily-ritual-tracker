@@ -1,13 +1,15 @@
+import { REPLServer } from 'repl'
 import chalk from 'chalk'
 
 import { Stack } from '../../stack'
+
+import { addEntry } from '../../../services/tracker'
 
 import {
   ActiveSessionArgs,
   checkActiveSession,
   terminate
 } from '../utils'
-import { REPLServer } from 'repl'
 
 type EnterFieldArgs = [...session: ActiveSessionArgs, fieldName: string]
 type EnterEntryArgs = [...session: EnterFieldArgs, entryValue: string]
@@ -78,9 +80,9 @@ const optionalAddDescription = (next: (args: EnterDescriptionArgs) => void) => {
   }
 }
 
-const addEntry = (next: (args: ActiveSessionArgs) => void) => {
+const updateTracker = (next: (args: ActiveSessionArgs) => void) => {
   return ([repl, session, field, entry, description]: EnterDescriptionArgs) => {
-    session.addEntry({
+    session.data = addEntry(session.data, {
       field,
       value: entry,
       date: new Date().toDateString(),
@@ -112,6 +114,6 @@ export const entry = new Stack(checkActiveSession)
   .push(selectField)
   .push(enterEntryValuePassthrough)
   .push(optionalAddDescription)
-  .push(addEntry)
+  .push(updateTracker)
   .push(terminate)
   .get()

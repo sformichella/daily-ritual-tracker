@@ -1,104 +1,49 @@
 import { readdirSync } from 'fs'
+import { v4 as uuid } from 'uuid'
+
+import { reference } from '../../models/reference'
+import { writeTracker } from '../../models/tracker'
 
 import {
-  DailyEntrySchema,
+  CreateDailyTrackerSchema,
   DailyTrackerSchema,
+  DailyEntrySchema,
   FieldSchema,
-  ValidateAddEntry,
-  ValidateRead
+  ValidateRead,
+  NameSchema
 } from '../../schemas/tracker'
 
-import {
-  Reference,
-  reference
-} from '../../models/reference'
+import { APP_DIR, JSON_EXTENSION } from '../../constants'
 
-import {
-  createTracker,
+const INIT_TRACKER: CreateDailyTrackerSchema = {
+  fields: [],
+  entries: [],
+}
+
+export const createTracker = (name: NameSchema) => {
+  const path = APP_DIR.concat(uuid().concat(JSON_EXTENSION))
+
+  const ref = reference(path)
+
+  const data: DailyTrackerSchema = {
+    name,
+    ...INIT_TRACKER,
+  }
+
+  writeTracker(ref, data)
+
+  return ref
+}
+
+export {
   readTracker,
-  writeTracker
+  writeTracker as updateTracker
 } from '../../models/tracker'
 
-import { APP_DIR } from '../../constants'
+export const findByName = (name: string) => {
+  const dir = APP_DIR.join('/')
 
-export class InitialSession {
-  ref: Reference | undefined
-
-  constructor() {
-    this.ref = undefined
-  }
-
-  new(name: string) {
-    const ref = createTracker(name)
-    return new ActiveSession(ref)
-  }
-
-  load(name: string) {
-    const loaded = findByName(name)
-    if(loaded === undefined) return loaded
-    return new ActiveSession(loaded)
-  }
-}
-
-export class ActiveSession {
-  ref: Reference
-  data: DailyTrackerSchema
-
-  constructor(ref: Reference) {
-    this.ref = ref
-    this.data = readTracker(ref)
-  }
-
-  save() {
-    writeTracker(this.ref, this.data)
-  }
-
-  exit() {
-    this.save()
-    return new InitialSession()
-  }
-
-  addField(field: FieldSchema) {
-    const updated: DailyTrackerSchema = {
-      ...this.data,
-      fields: [
-        ...this.data.fields,
-        field
-      ]
-    }
-    
-    this.data = updated
-
-    return this
-  }
-
-  addEntry(entry: DailyEntrySchema) {
-    const parsed = ValidateAddEntry.safeParse([this.data, entry])
-
-    if(!parsed.success) return parsed.error
-
-    const matched = parsed.data
-    
-    if(matched.length === 1) {
-      this.data = {
-        ...this.data,
-        entries: [
-          ...this.data.entries,
-          entry
-        ]
-      }
-  
-      return this
-    }
-
-    return this
-  }
-}
-
-function findByName(name: string) {
-  const appDir = APP_DIR.join('/')
-
-  const contents = readdirSync(appDir)
+  const contents = readdirSync(dir)
 
   for(const file of contents) {
     const path = APP_DIR.concat([file])
@@ -119,4 +64,28 @@ function findByName(name: string) {
       return reference(path)
     }
   }
+}
+
+export const addField = (tracker: DailyTrackerSchema, field: FieldSchema) => {
+  const updated: DailyTrackerSchema = {
+    ...tracker,
+    fields: [
+      ...tracker.fields,
+      field
+    ]
+  }
+
+  return updated
+}
+
+export const addEntry = (tracker: DailyTrackerSchema, entry: DailyEntrySchema) => {
+  const updated: DailyTrackerSchema = {
+    ...tracker,
+    entries: [
+      ...tracker.entries,
+      entry
+    ]
+  }
+
+  return updated
 }
