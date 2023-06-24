@@ -14,6 +14,7 @@ import { Session, ensureAppDirectory } from './utils'
 
 import {
   Session,
+  displaySession,
   ensureAppDirectory,
   splash 
 } from './utils'
