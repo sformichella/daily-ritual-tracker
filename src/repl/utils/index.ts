@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, statSync } from "fs"
 import { DailyTrackerSchema } from "../../schemas/tracker"
 import { Reference } from "../../models/reference"
 import { APP_DIR } from "../../constants"
+import chalk from "chalk"
 
 export type Session = {
   ref: Reference
@@ -30,4 +31,20 @@ export const ensureAppDirectory = () => {
 
 export const question = (repl: REPLServer, query: string) => {
   return new Promise<string>((res) => repl.question(query, res))
+}
+
+
+export const splash = () => {
+  console.clear()
+  
+  const bar = '--------'
+
+  console.log(
+    bar.repeat(7)
+    + '\n'
+    + `${bar.repeat(2)}  ${chalk.bold('Daily Ritual Tracker')}  ${bar}${bar}`
+    +'\n'
+    + bar.repeat(7)
+    + '\n'
+  )
 }

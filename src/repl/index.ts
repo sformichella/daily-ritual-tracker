@@ -12,9 +12,16 @@ import {
 import { field, entry, dir } from './commands'
 import { Session, ensureAppDirectory } from './utils'
 
+import {
+  Session,
+  ensureAppDirectory,
+  splash 
+} from './utils'
+
 export const repl = start()
 
 ensureAppDirectory()
+splash()
 
 let session: Session | undefined
 
