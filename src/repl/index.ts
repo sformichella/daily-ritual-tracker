@@ -85,7 +85,7 @@ repl.defineCommand('close', {
 })
 
 repl.defineCommand('dir', {
-  action: () => dir([repl])
+  action: () => dir(repl)
 })
 
 repl.defineCommand('field', {
