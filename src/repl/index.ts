@@ -93,5 +93,5 @@ repl.defineCommand('field', {
 })
 
 repl.defineCommand('entry', {
-  action: () => entry([repl, session])
+  action: () => entry(repl, session)
 })

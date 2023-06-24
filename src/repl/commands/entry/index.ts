@@ -1,119 +1,87 @@
-import { REPLServer } from 'repl'
+import type { REPLServer } from 'repl'
 import chalk from 'chalk'
-
-import { Stack } from '../../stack'
 
 import { addEntry } from '../../../services/tracker'
 
-import {
-  ActiveSessionArgs,
-  checkActiveSession,
-  terminate
-} from '../utils'
-
-type EnterFieldArgs = [...session: ActiveSessionArgs, fieldName: string]
-type EnterEntryArgs = [...session: EnterFieldArgs, entryValue: string]
-type EnterDescriptionArgs = [...fieldArgs: EnterEntryArgs, description: string]
+import { Session, question } from '../../utils'
 
 const TAB = '  '
 
-const selectField = (next: (args: EnterFieldArgs) => void) => {
-  return ([repl, session]: ActiveSessionArgs) => {
-    const fields = session.data.fields
+const selectField = async (repl: REPLServer, session: Session): Promise<string | undefined> => {
+  const fields = session.data.fields
 
-    if(fields.length === 0) {
-      return terminate(next)([repl])
-    }
-
-    const display = fields.reduce((display, { name, description }) => {
-      return display
-        + '\n' + TAB + chalk.bold(name)
-        + '\n\n' + TAB + TAB + `Description: "${description}"` + '\n'
-    }, '\n')
-
-    const query = `Select the field you want to add an entry to: ${display}` + '\nField: '
-
-    repl.question(query, (answer: string) => {
-      if(!fields.map((f) => f.name).includes(answer)) {
-        const message = chalk.red(`"${answer}" is not one of the available fields`)
-        console.log(message)
-        return selectField(next)([repl, session])
-      }
-
-      return next([repl, session, answer])
-    })
+  if(fields.length === 0) {
+    return undefined
   }
+
+  const display = fields.reduce((display, { name, description }) => {
+    return display
+      + '\n' + TAB + chalk.bold(name)
+      + '\n\n' + TAB + TAB + `Description: "${description}"` + '\n'
+  }, '\n')
+
+  const query = `Select the field you want to add an entry to: ${display}` + '\nField: '
+
+  const selectedField = await question(repl, query)
+
+  if(!fields.map((f) => f.name).includes(selectedField)) {
+    const message = chalk.red(`"${selectedField}" is not one of the available fields`)
+    console.log(message)
+    return selectField(repl, session)
+  }
+
+  return selectedField
 }
 
-const enterEntryValue = (next: (args: [REPLServer, string, string]) => void) => {
-  return ([repl, field]: [REPLServer, string]) => {
-    const query = `Enter a value for "${field}": `
-
-    repl.question(query, (answer: string) => {
-      return next([repl, field, answer])
-    })
-  }
+const enterEntryValue = (repl: REPLServer, field: string) => {
+  const query = `Enter a value for "${field}": `
+  return question(repl, query)
 }
 
-const optionalAddDescription = (next: (args: EnterDescriptionArgs) => void) => {
-  return ([repl, session, field, entry]: EnterEntryArgs) => {
-    const query = 'Would you like to add a description to this entry? (Y/n): '
+const optionalAddDescription = async (repl: REPLServer): Promise<string> => {
+  const query = 'Would you like to add a description to this entry? (Y/n): '
 
-    repl.question(query, (answer: string) => {
-      const parsed = answer.trim().toLowerCase()
+  const answer = await question(repl, query)
+  const parsed = answer.trim().toLowerCase()
 
-      if(parsed === 'y') {
-        repl.question('Enter a description: ', (answer: string) => {
-          return next([repl, session, field, entry, answer])
-        })
-      }
-
-      else if(parsed === 'n') {
-        return next([repl, session, field, entry, ''])
-      }
-
-      else {
-        console.log(chalk.red('Please answer with "y" or "n"\n'))
-        return optionalAddDescription(next)([repl, session, field, entry])
-      }
-    })
+  if(parsed === 'n') {
+    return ''
   }
+
+  if(parsed === 'y') {
+    return question(repl, 'Enter a description: ')
+  }
+
+  console.log(chalk.red('Please answer with "y" or "n"\n'))
+
+  return optionalAddDescription(repl)
 }
 
-const updateTracker = (next: (args: ActiveSessionArgs) => void) => {
-  return ([repl, session, field, entry, description]: EnterDescriptionArgs) => {
-    session.data = addEntry(session.data, {
-      field,
-      value: entry,
-      date: new Date().toDateString(),
-      description,
-    })
-
-    // A notion of a "passthrough" middleware would clean this up
-    // a bit. It seems silly for this function to need to pass repl 
-    // and session through just because a middleware down the line needs them
-    return next([repl, session])
+export const entry = async (repl: REPLServer, session: Session | undefined) => {
+  // checkActiveSession
+  if(session === undefined) {
+    console.error('Start a new session with ".load" or ".new" to use this command.')
+    repl.displayPrompt()
+    return
   }
-}
 
-// Example of what a passthrough might look like
-// Pretty verbose at the moment, but it does simplify
-// enterEntryValue such that it only works with values
-// that it actually needs
-const enterEntryValuePassthrough = (next: (args: EnterEntryArgs) => void) => {
-  return (value: EnterFieldArgs) => {
-    const nextWrapped = ([repl, field, desc]: [REPLServer, string, string]) => {
-      return next([repl, value[1], field, desc])
-    }
+  const selectedField = await selectField(repl, session)
 
-    return enterEntryValue(nextWrapped)([value[0], value[2]])
+  if(selectedField === undefined) {
+    const error = chalk.red('No fields for this tracker yet.')
+    const help = chalk.bold('Use .field to enter a field.')
+    console.log('\n' + error + '\n\n' + help + '\n')
+    repl.displayPrompt()
+    return
   }
-}
 
-export const entry = new Stack(checkActiveSession)
-  .push(selectField)
-  .push(enterEntryValuePassthrough)
-  .push(optionalAddDescription)
-  .push(updateTracker)
-  .push(terminate)
-  .get()
+  const entry = await enterEntryValue(repl, selectedField)
+  const description = await optionalAddDescription(repl)
+
+  session.data = addEntry(session.data, {
+    field: selectedField,
+    value: entry,
+    date: new Date().toDateString(),
+    description,
+  })
+}
