@@ -10,7 +10,6 @@ import {
 } from '../services/tracker'
 
 import { field, entry, dir } from './commands'
-import { Session, ensureAppDirectory } from './utils'
 
 import {
   Session,
@@ -72,6 +71,8 @@ repl.defineCommand('load', {
       ref,
       data
     }
+
+    displaySession(session)
     
     repl.displayPrompt()
     return
@@ -90,19 +91,35 @@ repl.defineCommand('close', {
 
     session = undefined
 
+    displaySession(session)
     repl.displayPrompt()
     return
   }
 })
 
 repl.defineCommand('dir', {
-  action: () => dir(repl)
+  action: () => {
+    dir(repl)
+    displaySession(session)
+    repl.displayPrompt()
+    return
+  }
 })
 
 repl.defineCommand('field', {
-  action: () => field(repl, session)
+  action: async () => {
+    await field(repl, session)
+    displaySession(session)
+    repl.displayPrompt()
+    return
+  }
 })
 
 repl.defineCommand('entry', {
-  action: () => entry(repl, session)
+  action: async () => {
+    await entry(repl, session)
+    displaySession(session)
+    repl.displayPrompt()
+    return
+  }
 })
