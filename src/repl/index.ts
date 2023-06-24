@@ -9,7 +9,11 @@ import {
   updateTracker
 } from '../services/tracker'
 
-import { field, entry, dir } from './commands'
+import {
+  field,
+  entry,
+  dir
+} from './commands'
 
 import {
   Session,
