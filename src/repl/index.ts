@@ -18,12 +18,12 @@ import {
   splash 
 } from './utils'
 
-export const repl = start()
+let session: Session | undefined
 
 ensureAppDirectory()
 splash()
 
-let session: Session | undefined
+export const repl = start()
 
 repl.defineCommand('new', {
   action: (name: string) => {
