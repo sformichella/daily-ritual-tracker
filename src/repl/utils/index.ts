@@ -1,11 +1,10 @@
-import type { REPLServer } from "repl"
-
 import { existsSync, mkdirSync, statSync } from "fs"
+import type { REPLServer } from "repl"
+import chalk from "chalk"
 
 import { DailyTrackerSchema } from "../../schemas/tracker"
 import { Reference } from "../../models/reference"
 import { APP_DIR } from "../../constants"
-import chalk from "chalk"
 
 export type Session = {
   name: string
