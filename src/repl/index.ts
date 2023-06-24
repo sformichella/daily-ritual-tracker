@@ -22,6 +22,7 @@ let session: Session | undefined
 
 ensureAppDirectory()
 splash()
+displaySession(session)
 
 export const repl = start()
 
@@ -37,6 +38,7 @@ repl.defineCommand('new', {
     const data = readTracker(ref)
 
     session = {
+      name,
       ref,
       data
     }
@@ -65,6 +67,7 @@ repl.defineCommand('load', {
     const data = readTracker(ref)
 
     session = {
+      name,
       ref,
       data
     }

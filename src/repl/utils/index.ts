@@ -8,6 +8,7 @@ import { APP_DIR } from "../../constants"
 import chalk from "chalk"
 
 export type Session = {
+  name: string
   ref: Reference
   data: DailyTrackerSchema
 }
@@ -33,6 +34,30 @@ export const question = (repl: REPLServer, query: string) => {
   return new Promise<string>((res) => repl.question(query, res))
 }
 
+export const displaySession = (session: Session | undefined) => {
+  if(session === undefined) {
+    console.log(
+      '\n'
+      + `${chalk.bold('No session loaded.')}`
+      + '\n' 
+      + '\n'
+      + `Use ${chalk.bold('.new <name>')} to create a new tracker`
+      + '\n'
+      + `Use ${chalk.bold('.load <name>')} to load an existing tracker`
+      + '\n'
+    )
+
+    return
+  }
+
+  console.log(
+    '\n'
+    + `Loaded: ${chalk.bold(session.name)}`
+    + '\n'
+  )
+
+  return
+}
 
 export const splash = () => {
   console.clear()
