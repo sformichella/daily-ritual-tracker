@@ -1,3 +1,5 @@
+import type { REPLServer } from "repl"
+
 import { existsSync, mkdirSync, statSync } from "fs"
 
 import { DailyTrackerSchema } from "../../schemas/tracker"
@@ -24,4 +26,8 @@ export const ensureAppDirectory = () => {
   if(!stats.isDirectory()) {
     throw new Error(`App directory ${path} exists but it is not directory`)
   }
+}
+
+export const question = (repl: REPLServer, query: string) => {
+  return new Promise<string>((res) => repl.question(query, res))
 }
