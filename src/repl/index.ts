@@ -89,7 +89,7 @@ repl.defineCommand('dir', {
 })
 
 repl.defineCommand('field', {
-  action: () => field([repl, session])
+  action: () => field(repl, session)
 })
 
 repl.defineCommand('entry', {

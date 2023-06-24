@@ -1,50 +1,31 @@
-import { Stack } from '../../stack'
-
+import { REPLServer } from 'repl'
 import { addField } from '../../../services/tracker'
+import { Session, question } from '../../utils'
 
-import {
-  ActiveSessionArgs,
-  checkActiveSession,
-  terminate
-} from '../utils'
-
-type EnterFieldArgs = [...session: ActiveSessionArgs, fieldName: string]
-type EnterDescriptionArgs = [...fieldArgs: EnterFieldArgs, description: string]
-
-const enterFieldName = (next: (args: EnterFieldArgs) => void) => {
-  return ([repl, session]: ActiveSessionArgs) => {
-    const query = 'Enter a name for your new field: '
-
-    repl.question(query, (answer: string) => {
-      return next([repl, session, answer])
-    })
-  }
+const enterFieldName = (repl: REPLServer) => {
+  return question(repl, 'Enter a name for your new field: ')
 }
 
-const enterDescription = (next: (args: EnterDescriptionArgs) => void) => {
-  return ([repl, session, field]: EnterFieldArgs) => {
-    const query = 'Enter a description for your field: '
-
-    repl.question(query, (answer: string) => {
-      return next([repl, session, field, answer])
-    })
-  }
+const enterFieldDescription = (repl: REPLServer) => {
+  return question(repl, 'Enter a description for your field: ')
 }
 
-const updateTracker = (next: (args: ActiveSessionArgs) => void) => {
-  return ([repl, session, field, description]: EnterDescriptionArgs) => {
-    session.data = addField(session.data, {
-      name: field,
-      description
-    })
-
-    return next([repl, session])
+export const field = async (repl: REPLServer, session: Session | undefined) => {
+  // checkActiveSession
+  if(session === undefined) {
+    console.error('Start a new session with ".load" or ".new" to use this command.')
+    repl.displayPrompt()
+    return
   }
-}
 
-export const field = new Stack(checkActiveSession)
-  .push(enterFieldName)
-  .push(enterDescription)
-  .push(updateTracker)
-  .push(terminate)
-  .get()
+  const fieldName = await enterFieldName(repl)
+  const fieldDescription = await enterFieldDescription(repl)
+
+  // updateTracker
+  session.data = addField(session.data, {
+    name: fieldName,
+    description: fieldDescription
+  })
+
+  return
+}
