@@ -21,11 +21,14 @@ const INIT_TRACKER: CreateDailyTrackerSchema = {
 }
 
 export const createTracker = (name: NameSchema) => {
-  const path = APP_DIR.concat(uuid().concat(JSON_EXTENSION))
+  const id = uuid()
+
+  const path = APP_DIR.concat(id.concat(JSON_EXTENSION))
 
   const ref = reference(path)
 
   const data: DailyTrackerSchema = {
+    id,
     name,
     ...INIT_TRACKER,
   }

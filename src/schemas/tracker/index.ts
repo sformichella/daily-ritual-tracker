@@ -52,6 +52,7 @@ export const CreateDailyTrackerSchema = z.object({
 })
 
 export const DailyTrackerSchema = z.object({
+  id: z.string().uuid(),
   name: NameSchema,
 }).and(CreateDailyTrackerSchema)
 
