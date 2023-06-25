@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rimraf ./dist && tsc --project tsconfig.json",
     "build:watch": "rimraf ./dist && tsc --watch --project tsconfig.json",
-    "start": "node --loader ./loader/index.js ./dist/src/index.js"
+    "repl": "node --loader ./loader/index.js ./dist/src/repl/index.js"
   },
   "keywords": [],
   "author": "",
