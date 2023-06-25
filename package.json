@@ -17,6 +17,7 @@
     "dotenv": "^16.3.1",
     "google-auth-library": "^8.8.0",
     "google-spreadsheet": "^3.3.0",
+    "open": "^9.1.0",
     "uuid": "^9.0.0",
     "zod": "^3.21.4"
   },
