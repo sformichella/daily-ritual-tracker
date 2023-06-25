@@ -12,7 +12,8 @@ import {
 import {
   field,
   entry,
-  dir
+  dir,
+  exportTracker
 } from './commands'
 
 import {
@@ -122,6 +123,15 @@ repl.defineCommand('field', {
 repl.defineCommand('entry', {
   action: async () => {
     await entry(repl, session)
+    displaySession(session)
+    repl.displayPrompt()
+    return
+  }
+})
+
+repl.defineCommand('export', {
+  action: async () => {
+    await exportTracker(repl, session)
     displaySession(session)
     repl.displayPrompt()
     return
