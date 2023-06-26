@@ -22,6 +22,8 @@ const INIT_TRACKER: CreateDailyTrackerSchema = {
   entries: [],
 }
 
+const ROW_COLUMN_OFFSET = 3
+
 export const createTracker = (name: NameSchema) => {
   const id = uuid()
 
@@ -110,6 +112,20 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
   if(result instanceof Error) {
     return result
   }
+
+  const [worksheet] = Object.values(sheet.sheetsById)
+
+  await worksheet.loadCells()
+
+  const fieldColumnIndex: { [name: string]: number } = {}
+
+  data.fields.forEach((field, i) => {
+    const cell = worksheet.getCell(ROW_COLUMN_OFFSET, ROW_COLUMN_OFFSET + i)
+    fieldColumnIndex[field.name] = ROW_COLUMN_OFFSET + i
+    cell.value = field.name
+  })
+
+  await worksheet.saveUpdatedCells()
 
   writeTracker(ref, { ...data, spreadsheetId: sheet.spreadsheetId })
 
