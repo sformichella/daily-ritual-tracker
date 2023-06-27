@@ -1,7 +1,8 @@
 import { readdirSync } from 'fs'
 import { v4 as uuid } from 'uuid'
-import { GoogleSpreadsheet } from 'google-spreadsheet'
 import { OAuth2Client } from 'google-auth-library'
+import { google } from 'googleapis'
+import { GoogleSpreadsheet } from 'google-spreadsheet'
 
 import { Reference, reference } from '../../models/reference'
 import { writeTracker } from '../../models/tracker'
@@ -96,9 +97,12 @@ export const addEntry = (tracker: DailyTrackerSchema, entry: DailyEntrySchema) =
 }
 
 export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Reference, data: DailyTrackerSchema) => {
+  // Setup clients
+  // Using google-spreadsheet for simple operations
+  // googleapis sheet client for more complicated stuff
   const sheet = new GoogleSpreadsheet()
-
   sheet.useOAuth2Client(authClient)
+  const googleSheets = google.sheets({ version: 'v4', auth: authClient }).spreadsheets
 
   const result = await sheet.createNewSpreadsheetDocument({
     title: data.name
@@ -111,9 +115,12 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
     return result
   }
 
+  const FIELDS_SHEET_NAME = 'Fields'
+  const ENTRIES_SHEET_NAME = 'Entries'
+
   // Save Fields
   const fieldSheet = await sheet.addWorksheet({
-    title: 'Fields'
+    title: FIELDS_SHEET_NAME
   })
 
   await fieldSheet.loadCells()
@@ -136,7 +143,7 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
 
   // Save entries
   const entriesSheet = await sheet.addWorksheet({
-    title: 'Entries'
+    title: ENTRIES_SHEET_NAME
   })
 
   await entriesSheet.loadCells()
@@ -156,6 +163,43 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
   })
 
   await entriesSheet.saveUpdatedCells()
+
+  const chartsSheet = await sheet.addWorksheet({
+    title: 'Charts'
+  })
+
+  // =QUERY({ Entries!A2:A, arrayformula(VALUE(substitute(regexextract(Entries!B2:B,"[\d\,]+"),",","."))), Entries!C2:D }, "SELECT sum(Col2), toDate(Col4) WHERE Col1='walk' GROUP BY toDate(Col4)")
+
+  // await googleSheets.values.update({
+  //   spreadsheetId: ,
+
+  //   range: 'A20',
+  //   requestBody: {
+  //     range: 'A20',
+  //     values: [
+  //       ['test']
+  //     ]
+  //   }
+  // })
+
+  // googleSheets.batchUpdate({
+  //   spreadsheetId: chartsSheet.sheetId,
+  //   requestBody: {
+  //     requests: [
+  //       {
+  //         addChart: {
+  //           chart: {
+  //             spec: {
+  //               basicChart: {
+  //                 chartType: 'COLUMN'
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     ]
+  //   }
+  // })
 
   const defaultSheet = Object.values(sheet.sheetsById)[0]
 
