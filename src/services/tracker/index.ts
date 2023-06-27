@@ -22,8 +22,6 @@ const INIT_TRACKER: CreateDailyTrackerSchema = {
   entries: [],
 }
 
-const ROW_COLUMN_OFFSET = 3
-
 export const createTracker = (name: NameSchema) => {
   const id = uuid()
 
@@ -113,19 +111,55 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
     return result
   }
 
-  const [worksheet] = Object.values(sheet.sheetsById)
-
-  await worksheet.loadCells()
-
-  const fieldColumnIndex: { [name: string]: number } = {}
-
-  data.fields.forEach((field, i) => {
-    const cell = worksheet.getCell(ROW_COLUMN_OFFSET, ROW_COLUMN_OFFSET + i)
-    fieldColumnIndex[field.name] = ROW_COLUMN_OFFSET + i
-    cell.value = field.name
+  // Save Fields
+  const fieldSheet = await sheet.addWorksheet({
+    title: 'Fields'
   })
 
-  await worksheet.saveUpdatedCells()
+  await fieldSheet.loadCells()
+  
+  const fieldsInit = [Object.keys(FieldSchema.shape)] as readonly [Array<keyof typeof FieldSchema.shape>, ...string[][]]
+
+  const fieldCells = data.fields.reduce((cells, field) => {
+    const [headers] = cells
+    const row = headers.map((header) => field[header])
+    return [...cells, row] as const
+  }, fieldsInit)
+
+  fieldCells.forEach((row, rowIndex) => {
+    row.forEach((value, columnIndex) => {
+      fieldSheet.getCell(rowIndex, columnIndex).value = value
+    })
+  })
+
+  await fieldSheet.saveUpdatedCells()
+
+  // Save entries
+  const entriesSheet = await sheet.addWorksheet({
+    title: 'Entries'
+  })
+
+  await entriesSheet.loadCells()
+
+  const entriesInit = [Object.keys(DailyEntrySchema.shape)] as readonly [Array<keyof typeof DailyEntrySchema.shape>, ...(string | number)[][]]
+
+  const entriesCells = data.entries.reduce((cells, entry) => {
+    const [headers] = cells
+    const row = headers.map((header) => entry[header])
+    return [...cells, row] as const
+  }, entriesInit)
+
+  entriesCells.forEach((row, rowIndex) => {
+    row.forEach((value, columnIndex) => {
+      entriesSheet.getCell(rowIndex, columnIndex).value = value
+    })
+  })
+
+  await entriesSheet.saveUpdatedCells()
+
+  const defaultSheet = Object.values(sheet.sheetsById)[0]
+
+  await defaultSheet.delete()
 
   writeTracker(ref, { ...data, spreadsheetId: sheet.spreadsheetId })
 
