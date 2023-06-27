@@ -34,17 +34,12 @@ export const FieldSchema = z.object({
   description: z.string()
 })
 
-const EntrySchema = z.object({
+export const DailyEntrySchema = z.object({
   field: z.string(),
   value: z.string(),
-  description: z.string()
+  description: z.string(),
+  time: z.number()
 })
-
-const DailySchema = z.object({
-  date: z.string().regex(MM_DD_YYYY_REGEX)
-})
-
-export const DailyEntrySchema = EntrySchema.and(DailySchema)
 
 export const CreateDailyTrackerSchema = z.object({
   fields: FieldSchema.array(),

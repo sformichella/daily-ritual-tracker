@@ -81,7 +81,7 @@ export const entry = async (repl: REPLServer, session: Session | undefined) => {
   session.data = addEntry(session.data, {
     field: selectedField,
     value: entry,
-    date: new Date().toDateString(),
+    time: Date.now(),
     description,
   })
 }
