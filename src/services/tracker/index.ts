@@ -117,6 +117,7 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
 
   const FIELDS_SHEET_NAME = 'Fields'
   const ENTRIES_SHEET_NAME = 'Entries'
+  const CHARTS_SHEET_NAME = 'Charts'
 
   // Save Fields
   const fieldSheet = await sheet.addWorksheet({
@@ -164,47 +165,84 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
 
   await entriesSheet.saveUpdatedCells()
 
+  // Start chart implementation
   const chartsSheet = await sheet.addWorksheet({
-    title: 'Charts'
+    title: CHARTS_SHEET_NAME
   })
 
-  // =QUERY({ Entries!A2:A, arrayformula(VALUE(substitute(regexextract(Entries!B2:B,"[\d\,]+"),",","."))), Entries!C2:D }, "SELECT sum(Col2), toDate(Col4) WHERE Col1='walk' GROUP BY toDate(Col4)")
+  // Aggregate data from walk entrues
+  await googleSheets.values.update({
+    spreadsheetId: sheet.spreadsheetId,
+    range: `${CHARTS_SHEET_NAME}!A20`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      range: `${CHARTS_SHEET_NAME}!A20`,
+      values: [
+        [`=QUERY({ Entries!A2:A, arrayformula(VALUE(substitute(regexextract(Entries!B2:B,"[\\d\\,]+"),",","."))), Entries!C2:D }, "SELECT sum(Col2), toDate(Col4) WHERE Col1='walk' GROUP BY toDate(Col4)")`]
+      ]
+    }
+  })
 
-  // await googleSheets.values.update({
-  //   spreadsheetId: ,
+  // Create chart
+  googleSheets.batchUpdate({
+    spreadsheetId: sheet.spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          addChart: {
+            chart: {
+              position: {
+                newSheet: true,
+              },
+              spec: {
+                basicChart: {
+                  chartType: 'COLUMN',
+                  axis: [{
+                    position: 'LEFT_AXIS',
+                    title: 'Time walking in minutes'
+                  }],
+                  domains: [
+                    {
+                      domain: {
+                        sourceRange: {
+                          sources: [
+                            {
+                              sheetId: (chartsSheet.sheetId as unknown) as number,
+                              startRowIndex: 20,
+                              startColumnIndex: 1,
+                              endColumnIndex: 2
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  series: [{
+                    series: {
+                      sourceRange: {
+                        sources: [{
+                          sheetId: (chartsSheet.sheetId as unknown) as number,
+                          startRowIndex: 20,
+                          startColumnIndex: 0,
+                          endColumnIndex: 1
+                        }]
+                      }
+                    }
+                  }]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  })
 
-  //   range: 'A20',
-  //   requestBody: {
-  //     range: 'A20',
-  //     values: [
-  //       ['test']
-  //     ]
-  //   }
-  // })
-
-  // googleSheets.batchUpdate({
-  //   spreadsheetId: chartsSheet.sheetId,
-  //   requestBody: {
-  //     requests: [
-  //       {
-  //         addChart: {
-  //           chart: {
-  //             spec: {
-  //               basicChart: {
-  //                 chartType: 'COLUMN'
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     ]
-  //   }
-  // })
-
+  // Default default sheet
   const defaultSheet = Object.values(sheet.sheetsById)[0]
-
   await defaultSheet.delete()
 
+  // Save locally
   writeTracker(ref, { ...data, spreadsheetId: sheet.spreadsheetId })
 
   return sheet
