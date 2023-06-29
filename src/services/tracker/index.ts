@@ -7,7 +7,6 @@ import { Reference, reference } from '../../models/reference'
 import { writeTracker } from '../../models/tracker'
 
 import {
-  CreateDailyTrackerSchema,
   DailyTrackerSchema,
   DailyEntrySchema,
   FieldSchema,
