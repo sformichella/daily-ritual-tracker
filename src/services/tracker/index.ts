@@ -97,7 +97,6 @@ export const addEntry = (tracker: DailyTrackerSchema, entry: DailyEntrySchema) =
 
 export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Reference, data: DailyTrackerSchema) => {
   // Setup clients
-  // Using google-spreadsheet for simple operations
   const sheet = new GoogleSpreadsheet()
   sheet.useOAuth2Client(authClient)
 
@@ -114,7 +113,6 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
 
   const FIELDS_SHEET_NAME = 'Fields'
   const ENTRIES_SHEET_NAME = 'Entries'
-  const CHARTS_SHEET_NAME = 'Charts'
 
   // Save Fields
   const fieldSheet = await sheet.addWorksheet({
@@ -162,7 +160,7 @@ export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Referen
 
   await entriesSheet.saveUpdatedCells()
 
-  // Default default sheet
+  // Delete default sheet
   const defaultSheet = Object.values(sheet.sheetsById)[0]
   await defaultSheet.delete()
 
