@@ -95,8 +95,7 @@ export const addEntry = (tracker: DailyTrackerSchema, entry: DailyEntrySchema) =
   return updated
 }
 
-export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Reference, data: DailyTrackerSchema) => {
-  // Setup clients
+export const createRemoteTracker = async (authClient: OAuth2Client, ref: Reference, data: DailyTrackerSchema) => {
   const sheet = new GoogleSpreadsheet()
   sheet.useOAuth2Client(authClient)
 

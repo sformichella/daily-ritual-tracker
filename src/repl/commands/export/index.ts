@@ -2,9 +2,9 @@ import { REPLServer } from "repl"
 import chalk from 'chalk'
 
 import { client, getAuthdClient } from '../../../services/auth'
+import { createRemoteTracker, updateRemoteTracker } from "../../../services/tracker"
 
 import { Session, question } from "../../utils"
-import { createRemoteTrakcer, updateRemoteTracker } from "../../../services/tracker"
 
 export const getClient = async () => {
   const cacheKey = 'auth_token_cache'
@@ -31,6 +31,7 @@ export const exportTracker = async (repl: REPLServer, session: Session | undefin
 
   const proceedQuery = 'Opening a browser window for authentication...'
     + '\n\n' + 'Would you like to proceed? (Y/n): '
+
   const proceed = await question(repl, proceedQuery).then((answer) => answer.trim().toLowerCase())
 
   if(proceed !== 'y') {
@@ -43,7 +44,7 @@ export const exportTracker = async (repl: REPLServer, session: Session | undefin
   const spreadsheetId = session.data.spreadsheetId
 
   if(spreadsheetId === undefined) {
-    const sheet = await createRemoteTrakcer(client, session.ref, session.data)
+    const sheet = await createRemoteTracker(client, session.ref, session.data)
 
     if(sheet instanceof Error) {
       console.log(chalk.red('Failed to create remote tracker'))
