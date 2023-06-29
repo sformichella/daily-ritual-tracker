@@ -111,68 +111,35 @@ export const createRemoteTracker = async (authClient: OAuth2Client, ref: Referen
   const result = await sheet.createNewSpreadsheetDocument({
     title: data.name
   }).catch((error) => {
-    console.log('Failed to create sheet', error.name)
-    return new Error()
+    console.log('Failed to create sheet')
+    return error as Error // Assume it's an error for now
   })
 
   if(result instanceof Error) {
     return result
   }
 
-  const FIELDS_SHEET_NAME = 'Fields'
-  const ENTRIES_SHEET_NAME = 'Entries'
+  const [fieldsSheet, entriesSheet] = await Promise.all([
+    await sheet.addWorksheet({ title: FIELDS_SHEET_NAME }),
+    await sheet.addWorksheet({ title: ENTRIES_SHEET_NAME })
+  ])
 
-  // Save Fields
-  const fieldSheet = await sheet.addWorksheet({
-    title: FIELDS_SHEET_NAME
-  })
+  await Promise.all([
+    fieldsSheet.loadCells(),
+    entriesSheet.loadCells()
+  ])
 
-  await fieldSheet.loadCells()
-  
-  const fieldsInit = [Object.keys(FieldSchema.shape)] as readonly [Array<keyof typeof FieldSchema.shape>, ...string[][]]
+  setCells(fieldsSheet, createFieldsData(data))
+  setCells(entriesSheet, createEntriesData(data))
 
-  const fieldCells = data.fields.reduce((cells, field) => {
-    const [headers] = cells
-    const row = headers.map((header) => field[header])
-    return [...cells, row] as const
-  }, fieldsInit)
-
-  fieldCells.forEach((row, rowIndex) => {
-    row.forEach((value, columnIndex) => {
-      fieldSheet.getCell(rowIndex, columnIndex).value = value
-    })
-  })
-
-  await fieldSheet.saveUpdatedCells()
-
-  // Save entries
-  const entriesSheet = await sheet.addWorksheet({
-    title: ENTRIES_SHEET_NAME
-  })
-
-  await entriesSheet.loadCells()
-
-  const entriesInit = [Object.keys(DailyEntrySchema.shape)] as readonly [Array<keyof typeof DailyEntrySchema.shape>, ...(string | number)[][]]
-
-  const entriesCells = data.entries.reduce((cells, entry) => {
-    const [headers] = cells
-    const row = headers.map((header) => entry[header])
-    return [...cells, row] as const
-  }, entriesInit)
-
-  entriesCells.forEach((row, rowIndex) => {
-    row.forEach((value, columnIndex) => {
-      entriesSheet.getCell(rowIndex, columnIndex).value = value
-    })
-  })
-
-  await entriesSheet.saveUpdatedCells()
-
-  // Delete default sheet
   const defaultSheet = Object.values(sheet.sheetsById)[0]
-  await defaultSheet.delete()
 
-  // Save locally
+  await Promise.all([
+    entriesSheet.saveUpdatedCells(),
+    fieldsSheet.saveUpdatedCells(),
+    defaultSheet.delete()
+  ])
+
   writeTracker(ref, { ...data, spreadsheetId: sheet.spreadsheetId })
 
   return sheet
