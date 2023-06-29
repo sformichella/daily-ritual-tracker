@@ -1,9 +1,7 @@
 import { readdirSync } from 'fs'
 import { v4 as uuid } from 'uuid'
-import { OAuth2Client } from 'google-auth-library'
-import { GoogleSpreadsheet } from 'google-spreadsheet'
 
-import { Reference, reference } from '../../models/reference'
+import { reference } from '../../models/reference'
 import { writeTracker } from '../../models/tracker'
 
 import {
@@ -14,22 +12,8 @@ import {
   NameSchema
 } from '../../schemas/tracker'
 
-import {
-  APP_DIR,
-  JSON_EXTENSION
-} from '../../constants'
-
-import {
-  INIT_TRACKER,
-  FIELDS_SHEET_NAME,
-  ENTRIES_SHEET_NAME
-} from './constants'
-
-import {
-  createEntriesData,
-  createFieldsData,
-  setCells
-} from './utils'
+import { APP_DIR, JSON_EXTENSION } from '../../constants'
+import { INIT_TRACKER } from './constants'
 
 export const createTracker = (name: NameSchema) => {
   const id = uuid()
@@ -102,58 +86,4 @@ export const addEntry = (tracker: DailyTrackerSchema, entry: DailyEntrySchema) =
   }
 
   return updated
-}
-
-export const createRemoteTracker = async (authClient: OAuth2Client, ref: Reference, data: DailyTrackerSchema) => {
-  const sheet = new GoogleSpreadsheet()
-  sheet.useOAuth2Client(authClient)
-
-  const result = await sheet.createNewSpreadsheetDocument({
-    title: data.name
-  }).catch((error) => {
-    console.log('Failed to create sheet')
-    return error as Error // Assume it's an error for now
-  })
-
-  if(result instanceof Error) {
-    return result
-  }
-
-  const [fieldsSheet, entriesSheet] = await Promise.all([
-    await sheet.addWorksheet({ title: FIELDS_SHEET_NAME }),
-    await sheet.addWorksheet({ title: ENTRIES_SHEET_NAME })
-  ])
-
-  await Promise.all([
-    fieldsSheet.loadCells(),
-    entriesSheet.loadCells()
-  ])
-
-  setCells(fieldsSheet, createFieldsData(data))
-  setCells(entriesSheet, createEntriesData(data))
-
-  const defaultSheet = Object.values(sheet.sheetsById)[0]
-
-  await Promise.all([
-    entriesSheet.saveUpdatedCells(),
-    fieldsSheet.saveUpdatedCells(),
-    defaultSheet.delete()
-  ])
-
-  writeTracker(ref, { ...data, spreadsheetId: sheet.spreadsheetId })
-
-  return sheet
-}
-
-export const getRemoteTracker = async (authClient: OAuth2Client, id: string) => {
-  const sheet = new GoogleSpreadsheet(id)
-  sheet.useOAuth2Client(authClient)
-  await sheet.loadInfo()
-  return sheet
-}
-
-export const updateRemoteTracker = async (authClient: OAuth2Client, data: DailyTrackerSchema, id: string) => {
-  const sheet = new GoogleSpreadsheet(id)
-  sheet.useOAuth2Client(authClient)
-  return sheet
 }

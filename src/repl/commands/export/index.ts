@@ -1,9 +1,8 @@
 import { REPLServer } from "repl"
 import chalk from 'chalk'
 
+import { createRemoteTracker, updateRemoteTracker } from "../../../models/remoteTracker"
 import { client, getAuthdClient } from '../../../services/auth'
-import { createRemoteTracker, updateRemoteTracker } from "../../../services/tracker"
-
 import { Session, question } from "../../utils"
 
 export const getClient = async () => {
@@ -40,6 +39,8 @@ export const exportTracker = async (repl: REPLServer, session: Session | undefin
   }
 
   const client = await getClient()
+
+  client
 
   const spreadsheetId = session.data.spreadsheetId
 
