@@ -1,7 +1,6 @@
 import { readdirSync } from 'fs'
 import { v4 as uuid } from 'uuid'
 import { OAuth2Client } from 'google-auth-library'
-import { google } from 'googleapis'
 import { GoogleSpreadsheet } from 'google-spreadsheet'
 
 import { Reference, reference } from '../../models/reference'
@@ -99,10 +98,8 @@ export const addEntry = (tracker: DailyTrackerSchema, entry: DailyEntrySchema) =
 export const createRemoteTrakcer = async (authClient: OAuth2Client, ref: Reference, data: DailyTrackerSchema) => {
   // Setup clients
   // Using google-spreadsheet for simple operations
-  // googleapis sheet client for more complicated stuff
   const sheet = new GoogleSpreadsheet()
   sheet.useOAuth2Client(authClient)
-  const googleSheets = google.sheets({ version: 'v4', auth: authClient }).spreadsheets
 
   const result = await sheet.createNewSpreadsheetDocument({
     title: data.name
