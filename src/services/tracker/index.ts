@@ -15,12 +15,22 @@ import {
   NameSchema
 } from '../../schemas/tracker'
 
-import { APP_DIR, JSON_EXTENSION } from '../../constants'
+import {
+  APP_DIR,
+  JSON_EXTENSION
+} from '../../constants'
 
-const INIT_TRACKER: CreateDailyTrackerSchema = {
-  fields: [],
-  entries: [],
-}
+import {
+  INIT_TRACKER,
+  FIELDS_SHEET_NAME,
+  ENTRIES_SHEET_NAME
+} from './constants'
+
+import {
+  createEntriesData,
+  createFieldsData,
+  setCells
+} from './utils'
 
 export const createTracker = (name: NameSchema) => {
   const id = uuid()
