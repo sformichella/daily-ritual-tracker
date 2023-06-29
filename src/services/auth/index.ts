@@ -5,6 +5,11 @@ import { config as dotenv } from 'dotenv'
 
 dotenv()
 
+import {
+  USER_INFO_SCOPE,
+  SHEETS_ACCESS_SCOPE
+} from './constants'
+
 export const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -45,10 +50,7 @@ export const getAuthdClient = () => {
 
     const authorizeUrl = client.generateAuthUrl({
       access_type: 'offline',
-      scope: [
-        'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.googleapis.com/auth/drive.file'
-      ],
+      scope: [USER_INFO_SCOPE, SHEETS_ACCESS_SCOPE],
     });
       
     open(authorizeUrl, { wait: false }).then(cp => cp.unref())
