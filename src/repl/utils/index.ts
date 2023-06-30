@@ -36,8 +36,7 @@ export const question = (repl: REPLServer, query: string) => {
 export const displaySession = (session: Session | undefined) => {
   if(session === undefined) {
     console.log(
-      '\n'
-      + `${chalk.bold('No session loaded.')}`
+      `${chalk.bold('No tracker loaded.')}`
       + '\n' 
       + '\n'
       + `Use ${chalk.bold('.new <name>')} to create a new tracker`

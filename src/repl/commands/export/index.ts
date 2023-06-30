@@ -75,10 +75,11 @@ const authorize = async (repl: REPLServer): Promise<OAuth2Client | Error> => {
 }
 
 export const exportTracker = async (repl: REPLServer, session: Session | undefined) => {
+  console.log()
+
   // checkActiveSession
   if(session === undefined) {
-    console.error('Start a new session with ".load" or ".new" to use this command.')
-    repl.displayPrompt()
+    console.error('Start a new session with ".load" or ".new" to use this command.\n')
     return
   }
 
@@ -103,7 +104,7 @@ export const exportTracker = async (repl: REPLServer, session: Session | undefin
     const sheet = await createRemoteTracker(client, session.ref, session.data)
 
     if(sheet instanceof Error) {
-      console.log(chalk.red('Failed to create remote tracker'))
+      console.log(chalk.red('Failed to create remote tracker') + '\n')
       return
     }
 
@@ -118,7 +119,7 @@ export const exportTracker = async (repl: REPLServer, session: Session | undefin
 
   console.log(chalk.yellow('Updating remote tracker...') + '\n')
 
-  const sheet = await updateRemoteTracker(client, session.data, spreadsheetId)
+  await updateRemoteTracker(client, session.data, spreadsheetId)
 
   console.log(chalk.green('Done.') + '\n')
 }
