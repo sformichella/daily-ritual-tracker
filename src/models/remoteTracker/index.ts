@@ -65,15 +65,44 @@ export const getRemoteTracker = async (authClient: OAuth2Client, id: string) => 
 export const updateRemoteTracker = async (authClient: OAuth2Client, data: DailyTrackerSchema, id: string) => {
   const sheet = new GoogleSpreadsheet(id)
   sheet.useOAuth2Client(authClient)
+  await sheet.loadInfo()
 
   const {
     [FIELDS_SHEET_NAME]: fieldsSheet,
     [ENTRIES_SHEET_NAME]: entriesSheet
   } = sheet.sheetsByTitle
 
-  if(fieldsSheet === undefined || entriesSheet === undefined) {
-    return new Error('Fa')
+  const errors = []
+
+  if(fieldsSheet === undefined) {
+    errors.push(`Worksheet "${FIELDS_SHEET_NAME}" not found.`)
   }
+
+  if(entriesSheet === undefined) {
+    errors.push(`Worksheet "${ENTRIES_SHEET_NAME}" not found.`)
+  }
+
+  if(errors.length > 0) {
+    const message = 'Remote tracker failed to parse:'
+      + '\n\n'
+      + errors.join('\n')
+      + '\n'
+    
+    return new Error(message)
+  }
+
+  await Promise.all([
+    fieldsSheet.loadCells(),
+    entriesSheet.loadCells()
+  ])
+
+  setCells(fieldsSheet, createFieldsData(data))
+  setCells(entriesSheet, createEntriesData(data))
+
+  await Promise.all([
+    entriesSheet.saveUpdatedCells(),
+    fieldsSheet.saveUpdatedCells()
+  ])
 
   return sheet
 }
