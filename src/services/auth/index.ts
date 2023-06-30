@@ -10,6 +10,8 @@ import {
   SHEETS_ACCESS_SCOPE
 } from './constants'
 
+export * as constants from './constants'
+
 export const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
