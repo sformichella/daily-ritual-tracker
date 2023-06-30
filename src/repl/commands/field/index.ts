@@ -27,5 +27,7 @@ export const field = async (repl: REPLServer, session: Session | undefined) => {
     description: fieldDescription
   })
 
+  console.log()
+
   return
 }

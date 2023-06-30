@@ -49,11 +49,7 @@ export const displaySession = (session: Session | undefined) => {
     return
   }
 
-  console.log(
-    '\n'
-    + `Loaded: ${chalk.bold(session.name)}`
-    + '\n'
-  )
+  console.log(`Loaded: ${chalk.bold(session.name)}` + '\n')
 
   return
 }

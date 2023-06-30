@@ -84,4 +84,6 @@ export const entry = async (repl: REPLServer, session: Session | undefined) => {
     time: Date.now(),
     description,
   })
+
+  console.log()
 }

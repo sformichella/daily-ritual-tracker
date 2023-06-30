@@ -127,6 +127,8 @@ export const exportTracker = async (repl: REPLServer, session: Session | undefin
   }
 
   console.log(chalk.yellow('Updating remote tracker...') + '\n')
+
   const sheet = await updateRemoteTracker(client, session.data, spreadsheetId)
-  console.log('Update not implemented');
+
+  console.log(chalk.green('Done.') + '\n')
 }

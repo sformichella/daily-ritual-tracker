@@ -77,6 +77,7 @@ repl.defineCommand('load', {
       data
     }
 
+    console.log()
     displaySession(session)
     
     repl.displayPrompt()
