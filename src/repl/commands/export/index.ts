@@ -1,5 +1,6 @@
 import { REPLServer } from "repl"
 import chalk from 'chalk'
+import { Just, Nothing, Maybe, MaybeAsync, EitherAsync, Either, Right, Left } from 'purify-ts'
 
 import type { Credentials, OAuth2Client } from "google-auth-library"
 
@@ -9,23 +10,47 @@ import { client, getAuthdClient, constants } from '../../../services/auth'
 import { Session, question } from "../../utils"
 import { FIVE_MINUTES, OAUTH_TOKENS_CACHE_KEY } from './constants'
 
+const getAuthorizationToken = () => {
+  const cached = process.env[OAUTH_TOKENS_CACHE_KEY]
+  if(cached) return Just(JSON.parse(cached) as Credentials)
+  return Nothing
+}
+
+const refreshAuthorizationToken = async (creds: Credentials) => {
+  if(creds.expiry_date && creds.expiry_date > Date.now() + FIVE_MINUTES) {
+    return client.refreshAccessToken().then(({ credentials }) => Right(credentials))
+  }
+
+  return Right(creds)
+}
+
+const createAuthorizationToken = () => {
+
+}
+
 const authorize = async (repl: REPLServer): Promise<OAuth2Client | Error> => {
-  // Get credentials
-  let tokens: Credentials | undefined
-
-  if(process.env[OAUTH_TOKENS_CACHE_KEY] !== undefined) {
-    tokens = JSON.parse(process.env[OAUTH_TOKENS_CACHE_KEY]) as Credentials
-  }
-  
-  if(tokens?.expiry_date && tokens.expiry_date > Date.now() + FIVE_MINUTES) {
-    tokens = await client.refreshAccessToken().then(({ credentials }) => credentials)
-  }
-
-  if(tokens === undefined) {
+  const askToGenerateNewAuthTokens = () => {
     const proceedQuery = 'Opening a browser window for authentication...'
-    + '\n\n' + 'Would you like to proceed? (Y/n): '
-  
-    const proceed = await question(repl, proceedQuery).then((answer) => answer.trim().toLowerCase())
+      + '\n\n' + 'Would you like to proceed? (Y/n): '
+
+    return MaybeAsync.fromPromise(() => question(repl, proceedQuery).then(Just))
+  }
+
+  const parseAnswer = (answer: string): Either<'n', 'y'> => {
+    if(answer === 'y') return Right('y')
+    return Left('n')
+  }
+
+  const askGen = (): MaybeAsync<string> => askToGenerateNewAuthTokens()
+    .ifJust((a) => {
+      return EitherAsync
+        .liftEither(parseAnswer(a))
+        .ifLeft(() => askGen())
+    })
+
+  const asdfd = (c: Credentials) => {
+
+    const proceed = await 
   
     console.log()
   
